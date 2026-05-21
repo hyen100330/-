@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포켓몬스터</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; line-height:1.5; }
+        h1 { margin-bottom: 0.25em; }
+        .grid { display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; }
+        .card { width:120px; padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center; cursor:pointer; background:#fafafa; }
+        .card img { width:96px; height:96px; object-fit:contain; }
+        #detail { margin-top:18px; padding:12px; border:1px solid #eee; border-radius:8px; background:#fff; max-width:520px; }
+    </style>
+</head>
+<body>
+    <h1>포켓몬스터</h1>
+    <p>간단한 포켓몬 목록입니다. 포켓몬 카드를 클릭하면 추가 정보가 표시됩니다.</p>
+
+    <div class="grid" id="list">
+        <!-- 카드들은 스크립트로 삽입됩니다 -->
+    </div>
+
+    <div id="detail">포켓몬을 선택하세요.</div>
+
+    <script>
+        const pokemons = [
+            { id: 1, name: '이상해씨' },
+            { id: 4, name: '파이리' },
+            { id: 7, name: '꼬부기' },
+            { id: 25, name: '피카츄' },
+            { id: 39, name: '루주라' },
+            { id: 150, name: '뮤츠' }
+        ];
+
+        const listEl = document.getElementById('list');
+        const detailEl = document.getElementById('detail');
+
+        pokemons.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" alt="${p.name}">
+                <div>${p.name}</div>
+            `;
+            card.addEventListener('click', () => showDetail(p.id, p.name));
+            listEl.appendChild(card);
+        });
+
+        async function showDetail(id, name) {
+            detailEl.textContent = '불러오는 중...';
+            try {
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+                if (!res.ok) throw new Error('네트워크 오류');
+                const data = await res.json();
+                const types = data.types.map(t => t.type.name).join(', ');
+                detailEl.innerHTML = `
+                    <h3>${name} (ID: ${id})</h3>
+                    <img src="${data.sprites.front_default}" alt="${name}">
+                    <p>체력: ${data.stats.find(s=>s.stat.name==='hp')?.base_stat ?? '-'} / 공격: ${data.stats.find(s=>s.stat.name==='attack')?.base_stat ?? '-'}</p>
+                    <p>타입: ${types}</p>
+                `;
+            } catch (e) {
+                detailEl.textContent = '정보를 불러오지 못했습니다.';
+            }
+        }
+    </script>
+</body>
+</html>
